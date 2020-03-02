@@ -5,7 +5,7 @@ const rp = require('request-promise');
 const mongoose = require('mongoose');
 const moment = require('moment');
 const methodOverride = require('method-override');
-const expressSanitizer= require('express-sanitizer');
+const expressSanitizer = require('express-sanitizer');
 const passport = require('passport');
 const bodyParser = require('body-parser');
 const User = require('./models/user');
@@ -28,22 +28,58 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.set('view engine', 'ejs');
 
+passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser())
+passport.deserializeUser(User.deserializeUser());
 
-app.get('/', function(req, res){
+//===============
+// ROUTES
+//================
+
+app.get('/', function (req, res) {
     res.render('home');
 });
 
-app.get('/secret', function(req, res){
+app.get('/secret', function (req, res) {
     res.render('secret');
 });
 
-app.get('*', function(req, res){
+//===========
+// Auth Routes
+//============
+
+app.get('/register', function (req, res) {
+    res.render('register')
+});
+
+app.post('/register', function (req, res) {
+    User.register(new User({username: req.body.user.username}), req.body.user.password, function (err, user) {
+        if(err){
+            console.log(err);
+            return res.render('register')
+        } else {
+            passport.authenticate('local')(req, res, function () {
+                console.log(user);
+                res.redirect('/secret');
+            })
+        }
+    })
+});
+
+// app.get('/log-in', function (req, res) {
+//     res.render('log-in')
+// });
+//
+// app.post('/log-in', passport.authenticate('local',{
+//     successRedirect: '/secret',
+//     failureRedirect: '/log-in'
+// }), function (req, res) {
+// });
+
+
+app.get('*', function (req, res) {
     res.send('404');
 });
 
-
-app.get
 
 app.listen(3092);
